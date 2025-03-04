@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -15,6 +16,56 @@ import (
 	"github.com/volte6/gomud/internal/rooms"
 	"github.com/volte6/gomud/internal/skills"
 )
+
+func getZoneDetails(w http.ResponseWriter, r *http.Request) {
+	allZones := []ZoneDetails{}
+	zoneCounter := map[string]int{}
+
+	for _, rId := range rooms.GetAllRoomIds() {
+		if room := rooms.LoadRoom(rId); room != nil {
+
+			if _, ok := zoneCounter[room.Zone]; !ok {
+
+				autoScale := ``
+
+				if rootRoomId, err := rooms.GetZoneRoot(room.Zone); err == nil {
+					if rootRoom := rooms.LoadRoom(rootRoomId); rootRoom != nil {
+						if rootRoom.ZoneConfig.MobAutoScale.Minimum > 0 || rootRoom.ZoneConfig.MobAutoScale.Maximum > 0 {
+							autoScale = fmt.Sprintf(`%d to %d`, rootRoom.ZoneConfig.MobAutoScale.Minimum, rootRoom.ZoneConfig.MobAutoScale.Maximum)
+						}
+					}
+				}
+
+				zoneCounter[room.Zone] = 0
+				allZones = append(allZones, ZoneDetails{
+					ZoneName:  room.Zone,
+					RoomCount: 0,
+					AutoScale: autoScale,
+				})
+			}
+			zoneCounter[room.Zone] = zoneCounter[room.Zone] + 1
+		}
+	}
+
+	for i, zInfo := range allZones {
+		zInfo.RoomCount = zoneCounter[zInfo.ZoneName]
+		allZones[i] = zInfo
+	}
+	mudlog.Info("Zone Details", "zones", allZones)
+
+	sort.SliceStable(allZones, func(i, j int) bool {
+		return allZones[i].ZoneName < allZones[j].ZoneName
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	zoneBytes, err := json.Marshal(allZones)
+	if err != nil {
+		mudlog.Error("JSON Marshal", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	w.Write(zoneBytes)
+}
 
 type ZoneDetails struct {
 	ZoneName  string

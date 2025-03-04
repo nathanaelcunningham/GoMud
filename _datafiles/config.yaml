@@ -286,7 +286,7 @@ TelnetPort: [33333, 44444]
 LocalPort: 9999
 # - WebPort -
 #   The port the server listens on for web requests
-WebPort: 80
+WebPort: 8081
 # - PublicFileUrl -
 #   The base URL files are served from (music, images, etc)
 PublicFileUrl: http://localhost/static/public/

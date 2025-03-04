@@ -33,9 +33,13 @@ func Listen(webPort int, wg *sync.WaitGroup, webSocketHandler func(*websocket.Co
 	// HTTP Server
 	httpServer = &http.Server{Addr: fmt.Sprintf(`:%d`, webPort)}
 
+	// http.Handle("/", webclient.SvelteKitHandler("/admin"))
+
+	http.HandleFunc("GET /api/zones", getZoneDetails)
+
 	// Routing
 	// Basic homepage
-	http.HandleFunc("/", serveHome)
+	// http.HandleFunc("/", serveHome)
 	// config view page
 	http.HandleFunc("/viewconfig", viewConfig)
 	// who's online
