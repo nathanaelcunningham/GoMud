@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"html"
 	"net/http"
 	"sort"
@@ -12,6 +13,49 @@ import (
 	"github.com/volte6/gomud/internal/items"
 	"github.com/volte6/gomud/internal/mudlog"
 )
+
+type GetItemsResponse struct {
+	ItemSpecs []items.ItemSpec     `json:"item_specs"`
+	ItemTypes []items.ItemTypeInfo `json:"item_types"`
+}
+
+func getItems(w http.ResponseWriter, r *http.Request) {
+	itemSpecs := []items.ItemSpec{}
+
+	itemTypes := items.ItemTypes()
+	itemTypes = append(itemTypes, items.ItemSubtypes()...)
+
+	typeCounter := map[string]int{}
+
+	for _, itemSpec := range items.GetAllItemSpecs() {
+
+		typeCounter[itemSpec.Type.String()] += 1
+		typeCounter[itemSpec.Subtype.String()] += 1
+
+		itemSpecs = append(itemSpecs, itemSpec)
+	}
+
+	for i, typeInfo := range itemTypes {
+		itemTypes[i].Count = typeCounter[typeInfo.Type]
+	}
+
+	sort.SliceStable(itemSpecs, func(i, j int) bool {
+		return itemSpecs[i].ItemId < itemSpecs[j].ItemId
+	})
+
+	sort.SliceStable(itemTypes, func(i, j int) bool {
+		return itemTypes[i].Count > itemTypes[j].Count
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(GetItemsResponse{
+		ItemSpecs: itemSpecs,
+		ItemTypes: itemTypes,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 
 func itemsIndex(w http.ResponseWriter, r *http.Request) {
 

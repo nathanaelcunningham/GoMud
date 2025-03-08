@@ -12,6 +12,7 @@ import (
 	"github.com/volte6/gomud/internal/configs"
 	"github.com/volte6/gomud/internal/mudlog"
 	"github.com/volte6/gomud/internal/util"
+	"github.com/volte6/gomud/webclient"
 )
 
 var (
@@ -33,9 +34,10 @@ func Listen(webPort int, wg *sync.WaitGroup, webSocketHandler func(*websocket.Co
 	// HTTP Server
 	httpServer = &http.Server{Addr: fmt.Sprintf(`:%d`, webPort)}
 
-	// http.Handle("/", webclient.SvelteKitHandler("/admin"))
+	http.Handle("/", webclient.SvelteKitHandler("/admin"))
 
 	http.HandleFunc("GET /api/zones", getZoneDetails)
+	http.HandleFunc("GET /api/items", getItems)
 
 	// Routing
 	// Basic homepage

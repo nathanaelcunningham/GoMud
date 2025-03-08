@@ -2,7 +2,8 @@
 	import '../app.css';
 	import { page } from '$app/stores';
 	import { derived } from 'svelte/store';
-	let { children } = $props();
+	import type { LayoutProps } from './$types';
+	let { children }: LayoutProps = $props();
 
 	// Define your navigation links
 	const links = [
@@ -26,8 +27,7 @@
 				<li>
 					<a
 						{href}
-						class="rounded-md px-3 py-2 transition-colors duration-200
-            {$currentPath === href
+						class="rounded-md px-3 py-2 transition-colors duration-200 {$currentPath === href
 							? 'bg-gray-400 text-white'
 							: 'text-gray-300 hover:bg-gray-700 hover:text-white'}"
 					>
